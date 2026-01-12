@@ -1,0 +1,12 @@
+{
+  "extends": "@spotify2tidal/config/typescript/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@spotify2tidal/types": ["../../packages/types/src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

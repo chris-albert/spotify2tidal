@@ -1,0 +1,23 @@
+{
+  "name": "spotify2tidal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Migrate your music library from Spotify to Tidal",
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean",
+    "deploy": "pnpm build && gh-pages -d apps/web/dist"
+  },
+  "devDependencies": {
+    "turbo": "^1.12.0",
+    "gh-pages": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
