@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { SpotifyLibrary, ExtractionProgress } from '@spotify2tidal/types'
+import { indexedDBStorage } from '@/lib/storage/IndexedDBStorage'
 
 export interface ExtractionState {
   // Extracted data
@@ -76,6 +77,7 @@ export const useExtractionStore = create<ExtractionState>()(
     }),
     {
       name: 'spotify2tidal-extraction',
+      storage: createJSONStorage(() => indexedDBStorage),
       partialize: (state) => ({
         library: state.library,
         extractionComplete: state.extractionComplete,

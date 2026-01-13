@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type {
   TrackMatchResult,
   AlbumMatchResult,
@@ -7,6 +7,7 @@ import type {
   MigrationStatistics,
   MatchingProgress,
 } from '@spotify2tidal/types'
+import { indexedDBStorage } from '@/lib/storage/IndexedDBStorage'
 
 export interface MatchingState {
   // Match results
@@ -118,6 +119,7 @@ export const useMatchingStore = create<MatchingState>()(
     }),
     {
       name: 'spotify2tidal-matching',
+      storage: createJSONStorage(() => indexedDBStorage),
       partialize: (state) => ({
         trackMatches: state.trackMatches,
         albumMatches: state.albumMatches,
