@@ -1,5 +1,6 @@
 import { generateCodeVerifier, generateCodeChallenge } from '@/lib/utils/pkce'
 import { TokenStore } from '@/lib/storage/TokenStore'
+import { CredentialsStore } from '@/lib/storage/CredentialsStore'
 import type { AuthTokens } from '@/store/authStore'
 
 /**
@@ -9,7 +10,7 @@ import type { AuthTokens } from '@/store/authStore'
  * Similar to Spotify but uses Tidal's OAuth endpoints.
  */
 
-const TIDAL_CLIENT_ID = import.meta.env.VITE_TIDAL_CLIENT_ID
+const getTidalClientId = () => CredentialsStore.getTidalClientId()
 const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.origin}/spotify2tidal/auth/tidal`
 const AUTH_ENDPOINT = 'https://login.tidal.com/authorize'
 const TOKEN_ENDPOINT = 'https://auth.tidal.com/v1/oauth2/token'
@@ -27,7 +28,8 @@ export class TidalAuth {
    * Generates PKCE codes and redirects to Tidal authorization
    */
   static async initiateAuth(): Promise<void> {
-    if (!TIDAL_CLIENT_ID) {
+    const clientId = getTidalClientId()
+    if (!clientId) {
       throw new Error('Tidal Client ID not configured')
     }
 
@@ -42,7 +44,7 @@ export class TidalAuth {
     // Build authorization URL
     const params = new URLSearchParams({
       response_type: 'code',
-      client_id: TIDAL_CLIENT_ID,
+      client_id: clientId,
       redirect_uri: REDIRECT_URI,
       scope: SCOPES,
       code_challenge: challenge,
@@ -60,7 +62,8 @@ export class TidalAuth {
    * @returns Access and refresh tokens
    */
   static async handleCallback(code: string): Promise<AuthTokens> {
-    if (!TIDAL_CLIENT_ID) {
+    const clientId = getTidalClientId()
+    if (!clientId) {
       throw new Error('Tidal Client ID not configured')
     }
 
@@ -81,7 +84,7 @@ export class TidalAuth {
           grant_type: 'authorization_code',
           code,
           redirect_uri: REDIRECT_URI,
-          client_id: TIDAL_CLIENT_ID,
+          client_id: clientId,
           code_verifier: verifier,
           scope: SCOPES,
         }),
@@ -127,7 +130,8 @@ export class TidalAuth {
    * @returns New access token
    */
   static async refreshToken(refreshToken: string): Promise<AuthTokens> {
-    if (!TIDAL_CLIENT_ID) {
+    const clientId = getTidalClientId()
+    if (!clientId) {
       throw new Error('Tidal Client ID not configured')
     }
 
@@ -140,7 +144,7 @@ export class TidalAuth {
         body: new URLSearchParams({
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
-          client_id: TIDAL_CLIENT_ID,
+          client_id: clientId,
         }),
       })
 

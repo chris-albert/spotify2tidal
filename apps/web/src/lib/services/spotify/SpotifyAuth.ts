@@ -1,5 +1,6 @@
 import { generateCodeVerifier, generateCodeChallenge } from '@/lib/utils/pkce'
 import { TokenStore } from '@/lib/storage/TokenStore'
+import { CredentialsStore } from '@/lib/storage/CredentialsStore'
 import type { AuthTokens } from '@/store/authStore'
 
 /**
@@ -8,7 +9,7 @@ import type { AuthTokens } from '@/store/authStore'
  * Implements browser-based PKCE flow for secure authentication without client secret.
  */
 
-const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID
+const getSpotifyClientId = () => CredentialsStore.getSpotifyClientId()
 const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.origin}/spotify2tidal/auth/spotify`
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize'
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token'
@@ -27,7 +28,8 @@ export class SpotifyAuth {
    * Generates PKCE codes and redirects to Spotify authorization
    */
   static async initiateAuth(): Promise<void> {
-    if (!SPOTIFY_CLIENT_ID) {
+    const clientId = getSpotifyClientId()
+    if (!clientId) {
       throw new Error('Spotify Client ID not configured')
     }
 
@@ -40,7 +42,7 @@ export class SpotifyAuth {
 
     // Build authorization URL
     const params = new URLSearchParams({
-      client_id: SPOTIFY_CLIENT_ID,
+      client_id: clientId,
       response_type: 'code',
       redirect_uri: REDIRECT_URI,
       code_challenge_method: 'S256',
@@ -60,7 +62,8 @@ export class SpotifyAuth {
    * @returns Access and refresh tokens
    */
   static async handleCallback(code: string): Promise<AuthTokens> {
-    if (!SPOTIFY_CLIENT_ID) {
+    const clientId = getSpotifyClientId()
+    if (!clientId) {
       throw new Error('Spotify Client ID not configured')
     }
 
@@ -81,7 +84,7 @@ export class SpotifyAuth {
           grant_type: 'authorization_code',
           code,
           redirect_uri: REDIRECT_URI,
-          client_id: SPOTIFY_CLIENT_ID,
+          client_id: clientId,
           code_verifier: verifier,
         }),
       })
@@ -124,7 +127,8 @@ export class SpotifyAuth {
    * @returns New access token
    */
   static async refreshToken(refreshToken: string): Promise<AuthTokens> {
-    if (!SPOTIFY_CLIENT_ID) {
+    const clientId = getSpotifyClientId()
+    if (!clientId) {
       throw new Error('Spotify Client ID not configured')
     }
 
@@ -137,7 +141,7 @@ export class SpotifyAuth {
         body: new URLSearchParams({
           grant_type: 'refresh_token',
           refresh_token: refreshToken,
-          client_id: SPOTIFY_CLIENT_ID,
+          client_id: clientId,
         }),
       })
 
