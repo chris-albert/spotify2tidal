@@ -1,17 +1,81 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { SpotifyAuth } from '@/lib/services/spotify/SpotifyAuth'
+import { SpotifyClient } from '@/lib/services/spotify/SpotifyClient'
+import { TidalAuth } from '@/lib/services/tidal/TidalAuth'
+import { TidalClient } from '@/lib/services/tidal/TidalClient'
 import SpotifyAuthButton from '@/components/auth/SpotifyAuthButton'
 import TidalAuthButton from '@/components/auth/TidalAuthButton'
 
 function HomePage() {
   const navigate = useNavigate()
-  const { initializeAuth, spotifyConnected, tidalConnected } = useAuth()
+  const {
+    initializeAuth,
+    spotifyConnected,
+    tidalConnected,
+    setSpotifyTokens,
+    setSpotifyUserId,
+    setTidalTokens,
+    setTidalUserId,
+  } = useAuth()
+  const [oauthStatus, setOauthStatus] = useState<string | null>(null)
+  const [oauthError, setOauthError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Initialize auth state on mount
-    initializeAuth()
-  }, [initializeAuth])
+    // Check for OAuth callback
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    const error = params.get('error')
+    const provider = sessionStorage.getItem('oauth_provider')
+
+    if (code && provider) {
+      handleOAuthCallback(code, provider)
+      // Clear URL params
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash)
+    } else if (error) {
+      setOauthError(`Authentication failed: ${error}`)
+      sessionStorage.removeItem('oauth_provider')
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash)
+    } else {
+      // Initialize auth state on mount
+      initializeAuth()
+    }
+  }, [])
+
+  const handleOAuthCallback = async (code: string, provider: string) => {
+    try {
+      if (provider === 'spotify') {
+        setOauthStatus('Connecting to Spotify...')
+        const tokens = await SpotifyAuth.handleCallback(code)
+        setSpotifyTokens(tokens)
+
+        setOauthStatus('Fetching Spotify profile...')
+        const user = await SpotifyClient.getCurrentUser()
+        setSpotifyUserId(user.id)
+
+        setOauthStatus('Spotify connected!')
+        setTimeout(() => setOauthStatus(null), 2000)
+      } else if (provider === 'tidal') {
+        setOauthStatus('Connecting to Tidal...')
+        const tokens = await TidalAuth.handleCallback(code)
+        setTidalTokens(tokens)
+
+        setOauthStatus('Fetching Tidal profile...')
+        const user = await TidalClient.getCurrentUser()
+        setTidalUserId(String(user.userId))
+
+        setOauthStatus('Tidal connected!')
+        setTimeout(() => setOauthStatus(null), 2000)
+      }
+    } catch (err) {
+      console.error('OAuth callback error:', err)
+      setOauthError(err instanceof Error ? err.message : 'Authentication failed')
+    } finally {
+      sessionStorage.removeItem('oauth_provider')
+      initializeAuth()
+    }
+  }
 
   const handleStartExtraction = () => {
     if (spotifyConnected) {
@@ -19,9 +83,37 @@ function HomePage() {
     }
   }
 
+  // Show loading state during OAuth
+  if (oauthStatus) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <div className="text-5xl mb-4">🔐</div>
+          <h2 className="text-xl font-bold mb-2">{oauthStatus}</h2>
+          <div className="flex justify-center mt-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container-custom py-16">
       <div className="max-w-4xl mx-auto">
+        {/* OAuth Error */}
+        {oauthError && (
+          <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-800 dark:text-red-300">{oauthError}</p>
+            <button
+              onClick={() => setOauthError(null)}
+              className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-6 pb-1 bg-gradient-to-r from-spotify-green to-tidal-blue bg-clip-text text-transparent">

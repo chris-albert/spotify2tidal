@@ -58,26 +58,20 @@ A modern web application to migrate your music library from Spotify to Tidal. Bu
 3. Fill in the details:
    - **App Name**: Spotify2Tidal
    - **App Description**: Personal music library migration tool
-4. Add **Redirect URIs**:
-   - Development: `http://localhost:5173/auth/spotify`
-   - Production: `https://yourusername.github.io/spotify2tidal/auth/spotify`
-5. Copy the **Client ID** and add it to `apps/web/.env.local`:
-   ```bash
-   VITE_SPOTIFY_CLIENT_ID=your_spotify_client_id
-   ```
+4. Add **Redirect URI**:
+   - `https://chris-albert.github.io/spotify2tidal/`
+   - (For local dev: `http://localhost:5173/spotify2tidal/`)
+5. Copy the **Client ID** - enter it in the app when clicking "Connect Spotify" (stored in localStorage)
 
 ### Tidal Developer Account
 
 1. Go to [Tidal Developer Portal](https://developer.tidal.com/)
 2. Register for developer access
 3. Create a new application
-4. Add **Redirect URIs**:
-   - Development: `http://localhost:5173/auth/tidal`
-   - Production: `https://yourusername.github.io/spotify2tidal/auth/tidal`
-5. Copy the **Client ID** and add it to `apps/web/.env.local`:
-   ```bash
-   VITE_TIDAL_CLIENT_ID=your_tidal_client_id
-   ```
+4. Add **Redirect URI**:
+   - `https://chris-albert.github.io/spotify2tidal/`
+   - (For local dev: `http://localhost:5173/spotify2tidal/`)
+5. Copy the **Client ID** - enter it in the app when clicking "Connect Tidal" (stored in localStorage)
 
 ## 📦 Project Structure
 
@@ -119,22 +113,20 @@ spotify2tidal/
    - Go to repository Settings → Pages
    - Source: GitHub Actions
 
-2. **Add Repository Secrets**
-   - Go to Settings → Secrets and variables → Actions
-   - Add:
-     - `VITE_SPOTIFY_CLIENT_ID`
-     - `VITE_TIDAL_CLIENT_ID`
+2. **Update Redirect URIs**
+   - Add this URL to both Spotify and Tidal developer dashboards:
+     - `https://chris-albert.github.io/spotify2tidal/`
 
-3. **Update Redirect URIs**
-   - Add production URLs to Spotify and Tidal developer dashboards
-   - Format: `https://yourusername.github.io/spotify2tidal/auth/spotify`
-
-4. **Deploy**
+3. **Deploy**
    ```bash
    git push origin main
    ```
 
    GitHub Actions will automatically build and deploy.
+
+4. **Enter Client IDs**
+   - When using the app, click "Connect Spotify" or "Connect Tidal"
+   - Enter your Client ID in the modal (saved to localStorage)
 
 ## ⚠️ Important Limitations
 
@@ -220,7 +212,7 @@ This project is licensed under the MIT License.
 
 ## 📧 Support
 
-If you have any questions or run into issues, please [open an issue](https://github.com/yourusername/spotify2tidal/issues).
+If you have any questions or run into issues, please [open an issue](https://github.com/chris-albert/spotify2tidal/issues).
 
 ---
 

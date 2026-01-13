@@ -10,7 +10,8 @@ import type { AuthTokens } from '@/store/authStore'
  */
 
 const getSpotifyClientId = () => CredentialsStore.getSpotifyClientId()
-const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.origin}/spotify2tidal/auth/spotify`
+// For hash routing on GitHub Pages, redirect to base URL - OAuth params are handled at root
+const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.origin}/spotify2tidal/`
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize'
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token'
 
@@ -39,6 +40,9 @@ export class SpotifyAuth {
 
     // Store verifier for later use in callback
     TokenStore.savePKCEVerifier(verifier)
+
+    // Store provider type for callback handling
+    sessionStorage.setItem('oauth_provider', 'spotify')
 
     // Build authorization URL
     const params = new URLSearchParams({

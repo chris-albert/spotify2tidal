@@ -11,7 +11,8 @@ import type { AuthTokens } from '@/store/authStore'
  */
 
 const getTidalClientId = () => CredentialsStore.getTidalClientId()
-const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.origin}/spotify2tidal/auth/tidal`
+// For hash routing on GitHub Pages, redirect to base URL - OAuth params are handled at root
+const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.origin}/spotify2tidal/`
 const AUTH_ENDPOINT = 'https://login.tidal.com/authorize'
 const TOKEN_ENDPOINT = 'https://auth.tidal.com/v1/oauth2/token'
 
@@ -40,6 +41,9 @@ export class TidalAuth {
     // Store verifier for later use in callback
     // Note: Using a different key than Spotify
     sessionStorage.setItem('tidal_pkce_verifier', verifier)
+
+    // Store provider type for callback handling
+    sessionStorage.setItem('oauth_provider', 'tidal')
 
     // Build authorization URL
     const params = new URLSearchParams({
