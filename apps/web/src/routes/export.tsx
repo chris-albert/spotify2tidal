@@ -30,8 +30,14 @@ function ExportPage() {
 
   // Generate export data
   const exportData = useMemo(() => {
+    const safeLibrary = library || {
+      playlists: [],
+      savedTracks: [],
+      savedAlbums: [],
+      followedArtists: [],
+    }
     return generateMigrationExport(
-      library,
+      safeLibrary,
       trackMatches,
       albumMatches,
       artistMatches,

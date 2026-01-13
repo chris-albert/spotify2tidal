@@ -38,7 +38,7 @@ export function generateMigrationExport(
     },
     playlists: library.playlists.map((playlist) => {
       // Get track matches for this playlist
-      const playlistTrackIds = playlist.tracks.items.map((t) => t.id)
+      const playlistTrackIds = playlist.tracks.items.map((t) => t.track.id)
       const playlistMatches = trackMatches.filter((m) =>
         playlistTrackIds.includes(m.spotifyTrack.id)
       )

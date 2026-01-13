@@ -71,11 +71,11 @@ export class SpotifyClient {
     const limit = 50 // Maximum allowed by Spotify
 
     while (nextUrl) {
-      const url = nextUrl.startsWith('http')
+      const url: string = nextUrl.startsWith('http')
         ? nextUrl.replace(API_BASE, '')
         : `${nextUrl}${nextUrl.includes('?') ? '&' : '?'}limit=${limit}&offset=${offset}`
 
-      const response = await this.request<SpotifyPaginatedResponse<T>>(url)
+      const response: SpotifyPaginatedResponse<T> = await this.request<SpotifyPaginatedResponse<T>>(url)
 
       items.push(...response.items)
 

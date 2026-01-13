@@ -2,6 +2,7 @@
   "extends": "@spotify2tidal/config/typescript/base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["./src/*"],
       "@spotify2tidal/types": ["../../packages/types/src/index.ts"]
