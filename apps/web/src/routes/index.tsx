@@ -24,7 +24,7 @@ function HomePage() {
       <div className="max-w-4xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-spotify-green to-tidal-blue bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold mb-6 pb-1 bg-gradient-to-r from-spotify-green to-tidal-blue bg-clip-text text-transparent">
             Spotify to Tidal Migration
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
