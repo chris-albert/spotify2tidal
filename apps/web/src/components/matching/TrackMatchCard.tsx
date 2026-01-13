@@ -37,10 +37,10 @@ export default function TrackMatchCard({
 
   return (
     <div
-      className={`bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow ${className}`}
+      className={`bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-shadow ${className}`}
     >
       {/* Header with confidence score */}
-      <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+      <div className="px-4 py-3 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
         <ConfidenceScore confidence={confidence} method={method} />
         {match.status === 'unmatched' && hasSuggestions && (
           <button
@@ -53,28 +53,28 @@ export default function TrackMatchCard({
       </div>
 
       {/* Side-by-side comparison */}
-      <div className="grid md:grid-cols-2 divide-x">
+      <div className="grid md:grid-cols-2 divide-x dark:divide-gray-700">
         {/* Spotify side */}
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 bg-spotify-green rounded-full flex items-center justify-center text-white font-bold text-sm">
               S
             </div>
-            <h4 className="font-semibold text-gray-900">Spotify</h4>
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100">Spotify</h4>
           </div>
 
           <div className="space-y-1.5">
-            <p className="font-medium text-gray-900">{spotifyTrack.name}</p>
-            <p className="text-sm text-gray-600">
+            <p className="font-medium text-gray-900 dark:text-gray-100">{spotifyTrack.name}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {spotifyTrack.artists.map((a) => a.name).join(', ')}
             </p>
             {spotifyTrack.album && (
-              <p className="text-sm text-gray-500">{spotifyTrack.album.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">{spotifyTrack.album.name}</p>
             )}
-            <div className="flex items-center gap-3 text-xs text-gray-500 pt-1">
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500 pt-1">
               <span>{formatDuration(spotifyTrack.duration_ms)}</span>
               {spotifyTrack.isrc && (
-                <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                <span className="font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
                   ISRC: {spotifyTrack.isrc}
                 </span>
               )}
@@ -90,19 +90,19 @@ export default function TrackMatchCard({
                 <div className="w-8 h-8 bg-tidal-blue rounded-full flex items-center justify-center text-black font-bold text-sm">
                   T
                 </div>
-                <h4 className="font-semibold text-gray-900">Tidal</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">Tidal</h4>
               </div>
 
               <div className="space-y-1.5">
-                <p className="font-medium text-gray-900">{tidalTrack.title}</p>
-                <p className="text-sm text-gray-600">{tidalTrack.artist.name}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{tidalTrack.title}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{tidalTrack.artist.name}</p>
                 {tidalTrack.album && (
-                  <p className="text-sm text-gray-500">{tidalTrack.album.title}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">{tidalTrack.album.title}</p>
                 )}
-                <div className="flex items-center gap-3 text-xs text-gray-500 pt-1">
+                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500 pt-1">
                   <span>{formatDuration(tidalTrack.duration)}</span>
                   {tidalTrack.isrc && (
-                    <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                    <span className="font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
                       ISRC: {tidalTrack.isrc}
                     </span>
                   )}
@@ -135,7 +135,7 @@ export default function TrackMatchCard({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500">
               <svg
                 className="w-12 h-12 mb-2"
                 fill="none"
@@ -163,7 +163,7 @@ export default function TrackMatchCard({
 
       {/* Actions */}
       {(match.status === 'unmatched' || confidence < 0.9) && (
-        <div className="px-4 py-3 border-t bg-gray-50 flex items-center justify-end gap-2">
+        <div className="px-4 py-3 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-end gap-2">
           {match.status === 'unmatched' ? (
             <button
               onClick={() => onManualMatch?.(match)}
@@ -175,7 +175,7 @@ export default function TrackMatchCard({
             <>
               <button
                 onClick={() => onManualMatch?.(match)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Change Match
               </button>

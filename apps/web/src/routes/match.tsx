@@ -105,10 +105,10 @@ function MatchPage() {
     return (
       <div className="container-custom py-16">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
             <div className="text-5xl mb-4">🎯</div>
             <h1 className="text-3xl font-bold mb-4">No Matches Yet</h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Extract your Spotify library and start matching tracks to see them
               here.
             </p>
@@ -129,10 +129,10 @@ function MatchPage() {
     return (
       <div className="container-custom py-16">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
             <div className="text-5xl mb-4">⏳</div>
             <h1 className="text-3xl font-bold mb-4">Matching in Progress</h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Please wait while we match your tracks...
             </p>
             <div className="flex justify-center">
@@ -150,7 +150,7 @@ function MatchPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Match Review</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Review matched tracks, verify low-confidence matches, and manually
             search for unmatched tracks.
           </p>
@@ -169,15 +169,15 @@ function MatchPage() {
             />
 
             {/* Quick filters */}
-            <div className="bg-white rounded-lg shadow-lg p-4 mt-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mt-4">
               <h3 className="font-semibold mb-3">Quick Filters</h3>
               <div className="space-y-2">
                 <button
                   onClick={() => setFilter('all')}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === 'all'
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   All Matches ({trackMatches.length})
@@ -186,8 +186,8 @@ function MatchPage() {
                   onClick={() => setFilter('matched')}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === 'matched'
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   Matched Only ({stats.totalMatches - stats.unmatched})
@@ -196,8 +196,8 @@ function MatchPage() {
                   onClick={() => setFilter('unmatched')}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === 'unmatched'
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   Unmatched ({stats.unmatched})
@@ -206,8 +206,8 @@ function MatchPage() {
                   onClick={() => setFilter('low-confidence')}
                   className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     filter === 'low-confidence'
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   Low Confidence (
@@ -222,7 +222,7 @@ function MatchPage() {
             </div>
 
             {/* Actions */}
-            <div className="bg-white rounded-lg shadow-lg p-4 mt-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mt-4">
               <h3 className="font-semibold mb-3">Actions</h3>
               <div className="space-y-2">
                 <button
@@ -234,7 +234,7 @@ function MatchPage() {
                 </button>
                 <button
                   onClick={() => navigate({ to: '/extract' })}
-                  className="w-full px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Back to Extraction
                 </button>
@@ -245,15 +245,15 @@ function MatchPage() {
           {/* Matches list */}
           <div className="lg:col-span-2">
             {/* Sort controls */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Showing {filteredAndSortedMatches.length} matches
                 </span>
                 <div className="flex items-center gap-2">
                   <label
                     htmlFor="sort"
-                    className="text-sm text-gray-600 font-medium"
+                    className="text-sm text-gray-600 dark:text-gray-400 font-medium"
                   >
                     Sort by:
                   </label>
@@ -261,7 +261,7 @@ function MatchPage() {
                     id="sort"
                     value={sort}
                     onChange={(e) => setSort(e.target.value as SortOption)}
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="confidence-asc">
                       Confidence (Low to High)
@@ -278,10 +278,10 @@ function MatchPage() {
 
             {/* Matches */}
             {filteredAndSortedMatches.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
                 <div className="text-5xl mb-4">🔍</div>
                 <h3 className="text-xl font-semibold mb-2">No matches found</h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400">
                   Try adjusting your filter to see more results.
                 </p>
               </div>
