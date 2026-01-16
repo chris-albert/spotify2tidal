@@ -16,13 +16,11 @@ const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.ori
 const AUTH_ENDPOINT = 'https://login.tidal.com/authorize'
 const TOKEN_ENDPOINT = 'https://auth.tidal.com/v1/oauth2/token'
 
-// Required scopes for our application (OAuth 2.1 scopes)
-// Old scopes (r_usr, w_usr, w_sub) are deprecated
-const SCOPES = [
-  'user.read', // Read user information
-  'collection.read', // Read user's collection
-  'playlists.read', // Read user's playlists
-].join(' ')
+// Note: Scopes must be configured in your Tidal Developer Portal app settings
+// Using empty scope for basic authentication - catalog search works without user scopes
+// If you need user data access, configure scopes in the portal and uncomment below:
+// const SCOPES = 'user.read collection.read playlists.read'
+const SCOPES = ''
 
 export class TidalAuth {
   /**
@@ -51,10 +49,14 @@ export class TidalAuth {
       response_type: 'code',
       client_id: clientId,
       redirect_uri: REDIRECT_URI,
-      scope: SCOPES,
       code_challenge: challenge,
       code_challenge_method: 'S256',
     })
+
+    // Only add scope if specified
+    if (SCOPES) {
+      params.set('scope', SCOPES)
+    }
 
     // Redirect to Tidal authorization
     window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`
@@ -80,19 +82,25 @@ export class TidalAuth {
 
     try {
       // Exchange code for tokens
+      const tokenParams = new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: REDIRECT_URI,
+        client_id: clientId,
+        code_verifier: verifier,
+      })
+
+      // Only add scope if specified
+      if (SCOPES) {
+        tokenParams.set('scope', SCOPES)
+      }
+
       const response = await fetch(TOKEN_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: REDIRECT_URI,
-          client_id: clientId,
-          code_verifier: verifier,
-          scope: SCOPES,
-        }),
+        body: tokenParams,
       })
 
       if (!response.ok) {
