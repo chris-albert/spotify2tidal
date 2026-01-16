@@ -16,11 +16,12 @@ const REDIRECT_URI = `${import.meta.env.VITE_REDIRECT_URI || window.location.ori
 const AUTH_ENDPOINT = 'https://login.tidal.com/authorize'
 const TOKEN_ENDPOINT = 'https://auth.tidal.com/v1/oauth2/token'
 
-// Required scopes for our application
+// Required scopes for our application (OAuth 2.1 scopes)
+// Old scopes (r_usr, w_usr, w_sub) are deprecated
 const SCOPES = [
-  'r_usr', // Read user information
-  'w_usr', // Write user information (for future playlist creation)
-  'w_sub', // Manage subscriptions (for favorites/library)
+  'user.read', // Read user information
+  'collection.read', // Read user's collection
+  'playlists.read', // Read user's playlists
 ].join(' ')
 
 export class TidalAuth {

@@ -64,14 +64,15 @@ export interface TidalArtistResponse {
 }
 
 export interface TidalUserProfile {
-  userId: number
+  userId: number | string
+  username?: string
   email?: string
-  countryCode: string
+  countryCode?: string
   fullName?: string
   firstName?: string
   lastName?: string
   nickname?: string
-  created: string
+  created?: string
 }
 
 export interface TidalError {

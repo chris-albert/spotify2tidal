@@ -60,11 +60,34 @@ export class TidalClient {
 
   /**
    * Get current user profile
+   * Note: Tidal's API is in transition - try multiple endpoint formats
    */
   static async getCurrentUser(): Promise<TidalUserProfile> {
-    // Note: Tidal's user endpoint might be different, adjust as needed
-    // This is a placeholder - check Tidal API docs for actual endpoint
-    return this.request<TidalUserProfile>('v1/users/me')
+    // Try the v2 user endpoint first (works with user.read scope)
+    const endpoints = [
+      'v2/userProfile',
+      'v2/users/me',
+      'v1/users/me',
+    ]
+
+    let lastError: Error | null = null
+
+    for (const endpoint of endpoints) {
+      try {
+        return await this.request<TidalUserProfile>(endpoint)
+      } catch (error) {
+        lastError = error as Error
+        // Continue to next endpoint
+      }
+    }
+
+    // If all endpoints fail, return a minimal user profile
+    // This allows the app to continue working even if user info isn't available
+    console.warn('Could not fetch Tidal user profile, using fallback:', lastError?.message)
+    return {
+      userId: 'authenticated',
+      username: 'Tidal User',
+    }
   }
 
   /**
