@@ -2,7 +2,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useSpotify } from '@/hooks/useSpotify'
+import { useMatching } from '@/hooks/useMatching'
 import { SpotifyClient } from '@/lib/services/spotify/SpotifyClient'
+import type { SpotifyTrack } from '@spotify2tidal/types'
 
 /**
  * Extraction Route
@@ -15,8 +17,9 @@ import { SpotifyClient } from '@/lib/services/spotify/SpotifyClient'
 
 function ExtractionPage() {
   const navigate = useNavigate()
-  const { spotifyConnected } = useAuth()
+  const { spotifyConnected, tidalConnected } = useAuth()
   const { setLibrary } = useSpotify()
+  const { matchAllTracks, isMatching, progress: matchingProgress } = useMatching()
 
   const [isExtracting, setIsExtracting] = useState(false)
   const [currentStage, setCurrentStage] = useState<string>('')
@@ -58,6 +61,37 @@ function ExtractionPage() {
       // Save to store
       setLibrary(library)
 
+      // If Tidal is connected, start matching
+      if (tidalConnected) {
+        setCurrentStage('Matching tracks with Tidal...')
+        setProgress(null)
+
+        // Collect all unique tracks
+        const allTracks: SpotifyTrack[] = []
+        const seenIds = new Set<string>()
+
+        // Add saved tracks
+        library.savedTracks.forEach((track) => {
+          if (!seenIds.has(track.id)) {
+            seenIds.add(track.id)
+            allTracks.push(track)
+          }
+        })
+
+        // Add tracks from playlists
+        library.playlists.forEach((playlist) => {
+          playlist.tracks.items.forEach((item) => {
+            if (item.track && !seenIds.has(item.track.id)) {
+              seenIds.add(item.track.id)
+              allTracks.push(item.track)
+            }
+          })
+        })
+
+        // Start matching
+        await matchAllTracks(allTracks)
+      }
+
       // Navigate to matching page
       setTimeout(() => {
         navigate({ to: '/match' })
@@ -83,7 +117,7 @@ function ExtractionPage() {
             </div>
           )}
 
-          {!isExtracting ? (
+          {!isExtracting && !isMatching ? (
             <>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Click the button below to extract your complete Spotify library.
@@ -94,17 +128,28 @@ function ExtractionPage() {
                 <li>Saved albums</li>
                 <li>Followed artists</li>
               </ul>
+
+              {!tidalConnected && (
+                <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+                    <strong>Note:</strong> Connect to Tidal first to automatically match your tracks.
+                    Without Tidal connected, extraction will complete but matching will be skipped.
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={handleExtract}
                 className="w-full px-6 py-4 bg-spotify-green text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold text-lg"
               >
-                Start Extraction
+                {tidalConnected ? 'Extract & Match' : 'Start Extraction'}
               </button>
             </>
           ) : (
             <div className="text-center py-8">
-              <div className="text-5xl mb-4">🎵</div>
+              <div className="text-5xl mb-4">{isMatching ? '🎯' : '🎵'}</div>
               <h2 className="text-xl font-semibold mb-2">{currentStage}</h2>
+              {/* Show extraction progress */}
               {progress && (
                 <div className="mt-6">
                   <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -125,8 +170,34 @@ function ExtractionPage() {
                   </div>
                 </div>
               )}
+              {/* Show matching progress */}
+              {isMatching && matchingProgress && (
+                <div className="mt-6">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <span>
+                      {matchingProgress.current} / {matchingProgress.total} tracks
+                    </span>
+                    <span>
+                      {((matchingProgress.current / matchingProgress.total) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div
+                      className="bg-tidal-blue h-3 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(matchingProgress.current / matchingProgress.total) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  {matchingProgress.currentTrack && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 truncate">
+                      Matching: {matchingProgress.currentTrack}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="mt-8 flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-spotify-green"></div>
+                <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${isMatching ? 'border-tidal-blue' : 'border-spotify-green'}`}></div>
               </div>
             </div>
           )}
