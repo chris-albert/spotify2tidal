@@ -1,25 +1,21 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { useSpotify } from '@/hooks/useSpotify'
 import { useMatching } from '@/hooks/useMatching'
 import { SpotifyClient } from '@/lib/services/spotify/SpotifyClient'
-import type { SpotifyTrack } from '@spotify2tidal/types'
+import type { SpotifyArtist } from '@spotify2tidal/types'
 
 /**
  * Extraction Route
  *
- * Allows users to extract their complete Spotify library including:
- * - Playlists with all tracks
- * - Saved albums
- * - Followed artists
+ * Simplified extraction that only handles followed artists.
+ * Skips playlists and saved songs for now.
  */
 
 function ExtractionPage() {
   const navigate = useNavigate()
   const { spotifyConnected, tidalConnected } = useAuth()
-  const { setLibrary } = useSpotify()
-  const { matchAllTracks, isMatching, progress: matchingProgress } = useMatching()
+  const { matchAllArtists, isMatching } = useMatching()
 
   const [isExtracting, setIsExtracting] = useState(false)
   const [currentStage, setCurrentStage] = useState<string>('')
@@ -28,6 +24,7 @@ function ExtractionPage() {
     total: number
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [artists, setArtists] = useState<SpotifyArtist[]>([])
 
   useEffect(() => {
     // Redirect to home if not connected
@@ -41,58 +38,26 @@ function ExtractionPage() {
       setIsExtracting(true)
       setError(null)
 
-      const library = await SpotifyClient.extractLibrary(
-        (stage) => {
-          setCurrentStage(
-            stage === 'playlists'
-              ? 'Extracting playlists...'
-              : stage === 'albums'
-              ? 'Extracting saved albums...'
-              : stage === 'artists'
-              ? 'Extracting followed artists...'
-              : 'Complete!'
-          )
-        },
-        (stageName, current, total) => {
+      // Extract followed artists only
+      setCurrentStage('Extracting followed artists...')
+      const followedArtists = await SpotifyClient.extractArtistsOnly(
+        (current, total) => {
           setProgress({ current, total })
         }
       )
 
-      // Save to store
-      setLibrary(library)
+      setArtists(followedArtists)
+      setCurrentStage(`Found ${followedArtists.length} artists!`)
+      setProgress(null)
 
       // If Tidal is connected, start matching
-      if (tidalConnected) {
-        setCurrentStage('Matching tracks with Tidal...')
-        setProgress(null)
-
-        // Collect all unique tracks
-        const allTracks: SpotifyTrack[] = []
-        const seenIds = new Set<string>()
-
-        // Add saved tracks
-        library.savedTracks.forEach((track) => {
-          if (!seenIds.has(track.id)) {
-            seenIds.add(track.id)
-            allTracks.push(track)
-          }
-        })
-
-        // Add tracks from playlists
-        library.playlists.forEach((playlist) => {
-          playlist.tracks.items.forEach((item) => {
-            if (item.track && !seenIds.has(item.track.id)) {
-              seenIds.add(item.track.id)
-              allTracks.push(item.track)
-            }
-          })
-        })
-
-        // Start matching
-        await matchAllTracks(allTracks)
+      if (tidalConnected && followedArtists.length > 0) {
+        setCurrentStage('Matching artists with Tidal...')
+        await matchAllArtists(followedArtists)
+        setCurrentStage('Matching complete!')
       }
 
-      // Navigate to matching page
+      // Navigate to results page
       setTimeout(() => {
         navigate({ to: '/match' })
       }, 1500)
@@ -109,7 +74,7 @@ function ExtractionPage() {
     <div className="container-custom py-16">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold mb-6">Extract Spotify Library</h1>
+          <h1 className="text-3xl font-bold mb-6">Extract Spotify Artists</h1>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -120,19 +85,21 @@ function ExtractionPage() {
           {!isExtracting && !isMatching ? (
             <>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Click the button below to extract your complete Spotify library.
-                This includes:
+                Click the button below to extract your followed artists from Spotify
+                and match them to Tidal.
               </p>
-              <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 mb-8 space-y-2">
-                <li>All playlists (public, private, and collaborative)</li>
-                <li>Saved albums</li>
-                <li>Followed artists</li>
-              </ul>
+
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-blue-800 dark:text-blue-300 text-sm">
+                  <strong>Simplified Mode:</strong> This extracts only followed artists.
+                  Playlists and saved songs are skipped for faster processing.
+                </p>
+              </div>
 
               {!tidalConnected && (
                 <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <p className="text-yellow-800 dark:text-yellow-300 text-sm">
-                    <strong>Note:</strong> Connect to Tidal first to automatically match your tracks.
+                    <strong>Note:</strong> Connect to Tidal first to automatically match your artists.
                     Without Tidal connected, extraction will complete but matching will be skipped.
                   </p>
                 </div>
@@ -142,19 +109,19 @@ function ExtractionPage() {
                 onClick={handleExtract}
                 className="w-full px-6 py-4 bg-spotify-green text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold text-lg"
               >
-                {tidalConnected ? 'Extract & Match' : 'Start Extraction'}
+                {tidalConnected ? 'Extract & Match Artists' : 'Extract Artists'}
               </button>
             </>
           ) : (
             <div className="text-center py-8">
               <div className="text-5xl mb-4">{isMatching ? '🎯' : '🎵'}</div>
               <h2 className="text-xl font-semibold mb-2">{currentStage}</h2>
-              {/* Show extraction progress */}
+              {/* Show progress */}
               {progress && (
                 <div className="mt-6">
                   <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                     <span>
-                      {progress.current} / {progress.total}
+                      {progress.current} / {progress.total} artists
                     </span>
                     <span>
                       {((progress.current / progress.total) * 100).toFixed(0)}%
@@ -162,38 +129,12 @@ function ExtractionPage() {
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                     <div
-                      className="bg-spotify-green h-3 rounded-full transition-all duration-300"
+                      className={`h-3 rounded-full transition-all duration-300 ${isMatching ? 'bg-tidal-blue' : 'bg-spotify-green'}`}
                       style={{
                         width: `${(progress.current / progress.total) * 100}%`,
                       }}
                     />
                   </div>
-                </div>
-              )}
-              {/* Show matching progress */}
-              {isMatching && matchingProgress && (
-                <div className="mt-6">
-                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                    <span>
-                      {matchingProgress.current} / {matchingProgress.total} tracks
-                    </span>
-                    <span>
-                      {((matchingProgress.current / matchingProgress.total) * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                    <div
-                      className="bg-tidal-blue h-3 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${(matchingProgress.current / matchingProgress.total) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  {matchingProgress.currentTrack && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 truncate">
-                      Matching: {matchingProgress.currentTrack}
-                    </p>
-                  )}
                 </div>
               )}
               <div className="mt-8 flex justify-center">

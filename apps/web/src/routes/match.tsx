@@ -1,50 +1,26 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useMemo } from 'react'
 import { useMatching } from '@/hooks/useMatching'
-import TrackMatchCard from '@/components/matching/TrackMatchCard'
-import MatchStatistics from '@/components/matching/MatchStatistics'
-import ManualMatchModal from '@/components/matching/ManualMatchModal'
-import type { TrackMatchResult, TidalTrack } from '@spotify2tidal/types'
+import type { ArtistMatchResult } from '@spotify2tidal/types'
 
 /**
  * Match Review Route
  *
- * Features:
- * - Display all matched tracks with confidence scores
- * - Filter by match status (all, matched, unmatched)
- * - Sort by confidence, name, or match method
- * - Manual match correction
- * - Statistics dashboard
- * - Export functionality
+ * Simplified version that shows artist matches.
  */
 
-type FilterOption = 'all' | 'matched' | 'unmatched' | 'low-confidence'
-type SortOption = 'confidence-asc' | 'confidence-desc' | 'name' | 'method'
+type FilterOption = 'all' | 'matched' | 'unmatched'
 
 function MatchPage() {
   const navigate = useNavigate()
-  const {
-    trackMatches,
-    isMatching,
-    matchingComplete,
-    getMatchStats,
-    manuallyMatchTrack,
-  } = useMatching()
+  const { artistMatches, isMatching, matchingComplete } = useMatching()
 
   const [filter, setFilter] = useState<FilterOption>('all')
-  const [sort, setSort] = useState<SortOption>('confidence-asc')
-  const [selectedMatch, setSelectedMatch] = useState<TrackMatchResult | null>(
-    null
-  )
-  const [showModal, setShowModal] = useState(false)
 
-  const stats = getMatchStats()
+  // Filter matches
+  const filteredMatches = useMemo(() => {
+    let filtered = [...artistMatches]
 
-  // Filter and sort matches
-  const filteredAndSortedMatches = useMemo(() => {
-    let filtered = [...trackMatches]
-
-    // Apply filter
     switch (filter) {
       case 'matched':
         filtered = filtered.filter((m) => m.status === 'matched')
@@ -52,56 +28,27 @@ function MatchPage() {
       case 'unmatched':
         filtered = filtered.filter((m) => m.status === 'unmatched')
         break
-      case 'low-confidence':
-        filtered = filtered.filter(
-          (m) => m.status === 'matched' && m.confidence < 0.9
-        )
-        break
-      // 'all' - no filtering
     }
 
-    // Apply sort
-    filtered.sort((a, b) => {
-      switch (sort) {
-        case 'confidence-asc':
-          return a.confidence - b.confidence
-        case 'confidence-desc':
-          return b.confidence - a.confidence
-        case 'name':
-          return a.spotifyTrack.name.localeCompare(b.spotifyTrack.name)
-        case 'method':
-          return a.method.localeCompare(b.method)
-        default:
-          return 0
-      }
-    })
+    // Sort by confidence (low to high to show problem cases first)
+    filtered.sort((a, b) => a.confidence - b.confidence)
 
     return filtered
-  }, [trackMatches, filter, sort])
+  }, [artistMatches, filter])
 
-  const handleManualMatch = (match: TrackMatchResult) => {
-    setSelectedMatch(match)
-    setShowModal(true)
-  }
-
-  const handleSelectMatch = async (tidalTrack: TidalTrack) => {
-    if (!selectedMatch) return
-
-    const updatedMatch: TrackMatchResult = {
-      ...selectedMatch,
-      tidalTrack,
-      status: 'matched',
-      method: 'fuzzy', // Manual selection treated as fuzzy
-      confidence: 1.0, // User confirmed = 100% confidence for them
+  const stats = useMemo(() => {
+    const matched = artistMatches.filter((m) => m.status === 'matched').length
+    const unmatched = artistMatches.filter((m) => m.status === 'unmatched').length
+    return {
+      total: artistMatches.length,
+      matched,
+      unmatched,
+      successRate: artistMatches.length > 0 ? (matched / artistMatches.length) * 100 : 0,
     }
-
-    await manuallyMatchTrack(selectedMatch.spotifyTrack.id, updatedMatch)
-    setShowModal(false)
-    setSelectedMatch(null)
-  }
+  }, [artistMatches])
 
   // No matches yet - show empty state
-  if (!isMatching && trackMatches.length === 0) {
+  if (!isMatching && artistMatches.length === 0) {
     return (
       <div className="container-custom py-16">
         <div className="max-w-4xl mx-auto">
@@ -109,8 +56,7 @@ function MatchPage() {
             <div className="text-5xl mb-4">🎯</div>
             <h1 className="text-3xl font-bold mb-4">No Matches Yet</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Extract your Spotify library and start matching tracks to see them
-              here.
+              Extract your Spotify artists and match them to see results here.
             </p>
             <button
               onClick={() => navigate({ to: '/extract' })}
@@ -133,7 +79,7 @@ function MatchPage() {
             <div className="text-5xl mb-4">⏳</div>
             <h1 className="text-3xl font-bold mb-4">Matching in Progress</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Please wait while we match your tracks...
+              Please wait while we match your artists...
             </p>
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -149,28 +95,42 @@ function MatchPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Match Review</h1>
+          <h1 className="text-3xl font-bold mb-2">Artist Match Results</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Review matched tracks, verify low-confidence matches, and manually
-            search for unmatched tracks.
+            Review matched artists from your Spotify library.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Statistics sidebar */}
           <div className="lg:col-span-1">
-            <MatchStatistics
-              totalMatches={stats.totalMatches}
-              matchedByISRC={stats.matchedByISRC}
-              matchedByExact={stats.matchedByExact}
-              matchedByFuzzy={stats.matchedByFuzzy}
-              unmatched={stats.unmatched}
-              successRate={stats.successRate}
-            />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <h3 className="font-semibold mb-4 text-lg">Statistics</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Total Artists</span>
+                  <span className="font-semibold">{stats.total}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Matched</span>
+                  <span className="font-semibold text-green-600">{stats.matched}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Unmatched</span>
+                  <span className="font-semibold text-red-600">{stats.unmatched}</span>
+                </div>
+                <div className="pt-3 border-t dark:border-gray-700">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Success Rate</span>
+                    <span className="font-semibold">{stats.successRate.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Quick filters */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mt-4">
-              <h3 className="font-semibold mb-3">Quick Filters</h3>
+              <h3 className="font-semibold mb-3">Filters</h3>
               <div className="space-y-2">
                 <button
                   onClick={() => setFilter('all')}
@@ -180,7 +140,7 @@ function MatchPage() {
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  All Matches ({trackMatches.length})
+                  All ({artistMatches.length})
                 </button>
                 <button
                   onClick={() => setFilter('matched')}
@@ -190,7 +150,7 @@ function MatchPage() {
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  Matched Only ({stats.totalMatches - stats.unmatched})
+                  Matched ({stats.matched})
                 </button>
                 <button
                   onClick={() => setFilter('unmatched')}
@@ -201,22 +161,6 @@ function MatchPage() {
                   }`}
                 >
                   Unmatched ({stats.unmatched})
-                </button>
-                <button
-                  onClick={() => setFilter('low-confidence')}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    filter === 'low-confidence'
-                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  Low Confidence (
-                  {
-                    trackMatches.filter(
-                      (m) => m.status === 'matched' && m.confidence < 0.9
-                    ).length
-                  }
-                  )
                 </button>
               </div>
             </div>
@@ -244,40 +188,13 @@ function MatchPage() {
 
           {/* Matches list */}
           <div className="lg:col-span-2">
-            {/* Sort controls */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Showing {filteredAndSortedMatches.length} matches
-                </span>
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="sort"
-                    className="text-sm text-gray-600 dark:text-gray-400 font-medium"
-                  >
-                    Sort by:
-                  </label>
-                  <select
-                    id="sort"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as SortOption)}
-                    className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="confidence-asc">
-                      Confidence (Low to High)
-                    </option>
-                    <option value="confidence-desc">
-                      Confidence (High to Low)
-                    </option>
-                    <option value="name">Track Name (A-Z)</option>
-                    <option value="method">Match Method</option>
-                  </select>
-                </div>
-              </div>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Showing {filteredMatches.length} artists
+              </span>
             </div>
 
-            {/* Matches */}
-            {filteredAndSortedMatches.length === 0 ? (
+            {filteredMatches.length === 0 ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
                 <div className="text-5xl mb-4">🔍</div>
                 <h3 className="text-xl font-semibold mb-2">No matches found</h3>
@@ -286,33 +203,61 @@ function MatchPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {filteredAndSortedMatches.map((match) => (
-                  <TrackMatchCard
-                    key={match.spotifyTrack.id}
-                    match={match}
-                    onManualMatch={handleManualMatch}
-                    onViewSuggestions={handleManualMatch}
-                  />
+              <div className="space-y-3">
+                {filteredMatches.map((match) => (
+                  <ArtistMatchCard key={match.spotifyArtist.id} match={match} />
                 ))}
               </div>
             )}
           </div>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Manual match modal */}
-      {selectedMatch && (
-        <ManualMatchModal
-          match={selectedMatch}
-          isOpen={showModal}
-          onClose={() => {
-            setShowModal(false)
-            setSelectedMatch(null)
-          }}
-          onSelectMatch={handleSelectMatch}
-        />
-      )}
+function ArtistMatchCard({ match }: { match: ArtistMatchResult }) {
+  const isMatched = match.status === 'matched'
+
+  return (
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border-l-4 ${
+      isMatched ? 'border-green-500' : 'border-red-500'
+    }`}>
+      <div className="flex items-center gap-4">
+        {/* Spotify Artist */}
+        <div className="flex-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Spotify</div>
+          <div className="font-medium">{match.spotifyArtist.name}</div>
+        </div>
+
+        {/* Arrow */}
+        <div className="text-gray-400">
+          {isMatched ? '→' : '✗'}
+        </div>
+
+        {/* Tidal Artist */}
+        <div className="flex-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tidal</div>
+          {isMatched && match.tidalArtist ? (
+            <div className="font-medium">{match.tidalArtist.name}</div>
+          ) : (
+            <div className="text-gray-400 italic">Not found</div>
+          )}
+        </div>
+
+        {/* Confidence */}
+        <div className="text-right">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Confidence</div>
+          <div className={`font-semibold ${
+            match.confidence >= 0.95 ? 'text-green-600' :
+            match.confidence >= 0.85 ? 'text-yellow-600' :
+            match.confidence >= 0.70 ? 'text-orange-600' :
+            'text-red-600'
+          }`}>
+            {(match.confidence * 100).toFixed(0)}%
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -37,8 +37,8 @@ export class TidalClient {
         ...options,
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+          'Content-Type': 'application/vnd.tidal.v1+json',
+          Accept: 'application/vnd.tidal.v1+json',
           ...options.headers,
         },
       })

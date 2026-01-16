@@ -8,7 +8,21 @@
       "WebFetch(domain:github.com)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git -c commit.gpgsign=false commit -m \"$\\(cat <<''EOF''\nInitial commit: Spotify to Tidal migration tool\n\nA web app for migrating playlists, saved tracks, and albums from Spotify to Tidal.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(pnpm install:*)",
+      "Bash(source:*)",
+      "Bash(nvm use:*)",
+      "Bash(git -c commit.gpgsign=false commit -m \"$\\(cat <<''EOF''\nAdd pnpm-lock.yaml for CI frozen-lockfile installs\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm exec vite build:*)",
+      "Bash(git -c commit.gpgsign=false commit -m :*)",
+      "Bash(git -c commit.gpgsign=false add apps/web/src/lib/services/tidal/TidalAuth.ts apps/web/src/lib/services/tidal/TidalClient.ts apps/web/src/lib/services/tidal/types.ts)",
+      "Bash(git -c commit.gpgsign=false commit -m \"$\\(cat <<''EOF''\nFix Tidal OAuth by updating to new API scopes\n\n- Update OAuth scopes from deprecated \\(r_usr, w_usr, w_sub\\) to new\n  OAuth 2.1 scopes \\(user.read, collection.read, playlists.read\\)\n- Add fallback handling for user profile endpoint in case it fails\n- Make TidalUserProfile fields more flexible to handle API variations\n\nFixes error code 11102 when authenticating with Tidal.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -c commit.gpgsign=false commit -m \"$\\(cat <<''EOF''\nTry empty scope for Tidal OAuth\n\nThe error 11102 may be caused by requesting scopes not configured\nin the Tidal Developer Portal. Using empty scope to test basic auth.\nCatalog search should work without user-specific scopes.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -c commit.gpgsign=false commit -m \"$\\(cat <<''EOF''\nSimplify to artists-only extraction and fix Tidal API headers\n\nChanges:\n- Fix Tidal API headers to use application/vnd.tidal.v1+json\n- Simplify extraction to only fetch followed artists \\(skip playlists/songs\\)\n- Update match page to show artist matches instead of track matches\n- Add extractArtistsOnly method to SpotifyClient\n\nThe Tidal search was returning 0 results due to incorrect Accept header.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }

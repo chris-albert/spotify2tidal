@@ -261,4 +261,13 @@ export class SpotifyClient {
       followedArtists,
     }
   }
+
+  /**
+   * Extract only followed artists (simplified extraction)
+   */
+  static async extractArtistsOnly(
+    onProgress?: (current: number, total: number) => void
+  ): Promise<SpotifyArtist[]> {
+    return this.getFollowedArtists(onProgress)
+  }
 }
